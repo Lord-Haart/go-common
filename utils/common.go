@@ -141,9 +141,11 @@ func NewEleErr[T any](err any) Ele[T] {
 	}
 }
 
-func RecoverAsEleErr[T any](ch chan<- Ele[T], err any) {
-	if err != nil {
-		ch <- NewEleErr[T](err)
+func RecoverAsEleErr[T any](ch chan<- Ele[T]) {
+	defer close(ch)
+
+	if err := recover(); err != nil {
+		ch <- NewEleErr[T](recover())
 	}
 }
 
@@ -169,6 +171,11 @@ func CeilingToDay(t time.Time) time.Time {
 // Today 获取表示今天0点0分0秒的日期。
 func Today() time.Time {
 	return TruncateToDay(time.Now())
+}
+
+// LocalDate 获取指定的本地日期。
+func LocalDate(year int, month time.Month, day int) time.Time {
+	return time.Date(year, month, day, 0, 0, 0, 0, time.Local)
 }
 
 // Sha256Salt 加盐然后获取Sha256的hash值。
@@ -198,6 +205,20 @@ func Sum[T any, R int | int8 | int16 | int32 | int64 | float32 | float64](a []T,
 	return r0
 }
 
+func Compute[T comparable, R any](a map[T]R, k T, r0 R, fn func(T, R) R) R {
+	var nv R
+	if ov, exists := a[k]; exists {
+		nv = ov
+	} else {
+		nv = r0
+	}
+
+	nv = fn(k, nv)
+	a[k] = nv
+	return nv
+}
+
+// SplitAsInt
 func SplitAsInt[T int | int8 | int16 | int32 | int64](s, sep string) []T {
 	tmp := strings.Split(s, sep)
 	result := make([]T, 0, len(tmp))
@@ -215,12 +236,14 @@ func SplitAsInt[T int | int8 | int16 | int32 | int64](s, sep string) []T {
 	return result
 }
 
+// ToStr 将对象转化为字符串。
+// 如果o表示nil则返回ds。
 func ToStr(o any, ds string) string {
 	if o == nil {
 		return ds
 	} else if cs, ok := o.(string); ok {
 		return cs
 	} else {
-		return ds
+		return fmt.Sprintf("%v", o)
 	}
 }
