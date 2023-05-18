@@ -1,0 +1,14 @@
+/*.exe
+/*.json
+/*.py
+/*.doc
+/*.docx
+/*.xls
+/*.xlsx
+/*-pid
+
+go.sum
+
+*.bak
+*.*~
+*.cmd
