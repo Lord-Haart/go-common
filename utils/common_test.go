@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"encoding/json"
+	"strconv"
 	"testing"
+	"time"
 )
 
 func TestSplitInt(t *testing.T) {
@@ -27,5 +30,57 @@ func TestSplitInt(t *testing.T) {
 
 	for _, s := range sa2 {
 		t.Logf("SplitInt(%v) => %v", s, SplitAsInt[int64](s, ","))
+	}
+}
+
+func TestTimestampJSON(t *testing.T) {
+	testcases1 := []struct {
+		param1 Timestamp
+		result int64
+	}{
+		{
+			param1: Timestamp(time.Date(2003, time.January, 2, 13, 54, 35, 0, time.UTC)),
+			result: 1041515675,
+		},
+		{
+			param1: Timestamp(time.Date(2025, time.December, 7, 8, 1, 3, 0, time.UTC)),
+			result: 1765094463,
+		},
+	}
+
+	for _, testcase := range testcases1 {
+		if b, err := json.Marshal(testcase.param1); err != nil {
+			t.Fatal(err)
+		} else if r, err := strconv.ParseInt(string(b), 10, 64); err != nil {
+			t.Fatal(err)
+		} else if r != testcase.result {
+			t.Errorf("Marshal(%v) => %v, wants %v", time.Time(testcase.param1), r, testcase.result)
+		}
+	}
+
+	testcases2 := []struct {
+		param1 int64
+		result Timestamp
+	}{
+		{
+			param1: 1041515675,
+			result: Timestamp(time.Date(2003, time.January, 2, 13, 54, 35, 0, time.UTC)),
+		},
+		{
+			param1: 1765094463,
+			result: Timestamp(time.Date(2025, time.December, 7, 8, 1, 3, 0, time.UTC)),
+		},
+	}
+
+	for _, testcase := range testcases2 {
+		var r Timestamp
+		if err := json.Unmarshal([]byte(strconv.FormatInt(testcase.param1, 10)), &r); err != nil {
+			t.Fatal(err)
+		} else {
+			r = Timestamp(time.Time(r).In(time.UTC))
+			if r != testcase.result {
+				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, time.Time(r), time.Time(testcase.result))
+			}
+		}
 	}
 }
