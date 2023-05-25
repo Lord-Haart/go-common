@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -245,5 +246,21 @@ func ToStr(o any, ds string) string {
 		return cs
 	} else {
 		return fmt.Sprintf("%v", o)
+	}
+}
+
+type Timestamp time.Time
+
+func (t Timestamp) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(t).Unix())
+}
+
+func (t *Timestamp) UnmarshalJSON(data []byte) error {
+	var l int64
+	if err := json.Unmarshal(data, &l); err != nil {
+		return err
+	} else {
+		*t = Timestamp(time.Unix(l, 0))
+		return nil
 	}
 }

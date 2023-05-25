@@ -18,6 +18,9 @@ type DbRow interface {
 	Scan(dest ...any) error
 }
 
+// ctxKey 用于在上下文中记录事务对象的key。
+type ctxKey struct{}
+
 var (
 	db              *sql.DB
 	SQL_ARG_PATTERN = regexp.MustCompile(`:[1|2|3|4|5|6|7|8|9](0|1|2|3|4|5|6|7|8|9)?`)
@@ -119,6 +122,19 @@ func prepareSql(query string, args []any) (string, []any) {
 	logSql(oquery, oargs)
 
 	return oquery, oargs
+}
+
+func BeginTx(ctx context.Context, serializable bool) context.Context {
+	isolation := sql.LevelDefault
+	if serializable {
+		isolation = sql.LevelSerializable
+	}
+
+	if tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: isolation}); err != nil {
+		panic(err)
+	} else {
+		return context.WithValue(ctx, ctxKey{}, tx)
+	}
 }
 
 // Exec 执行指定的sql并返回受影响的行数。
