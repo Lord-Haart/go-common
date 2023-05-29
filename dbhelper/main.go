@@ -21,6 +21,39 @@ type DbRow interface {
 // ctxKey 用于在上下文中记录事务对象的key。
 type ctxKey struct{}
 
+type ctxRef struct {
+	tx    *sql.Tx
+	alive bool
+}
+
+func (cr *ctxRef) Commit() error {
+	if cr.alive {
+		if err := cr.tx.Commit(); err != nil {
+			return err
+		} else {
+			cr.alive = false
+			log.Printf("[DEBUG] Committed transaction\n")
+			return nil
+		}
+	} else {
+		return nil
+	}
+}
+
+func (cr *ctxRef) Close() error {
+	if cr.alive {
+		if err := cr.tx.Rollback(); err != nil {
+			return err
+		} else {
+			cr.alive = false
+			log.Printf("[DEBUG] Rollback transaction\n")
+			return nil
+		}
+	} else {
+		return nil
+	}
+}
+
 var (
 	db              *sql.DB
 	SQL_ARG_PATTERN = regexp.MustCompile(`:[1|2|3|4|5|6|7|8|9](0|1|2|3|4|5|6|7|8|9)?`)
@@ -102,7 +135,7 @@ func logSql(query string, args []any) {
 	log.Printf("[DEBUG] Execute sql: %s\n", strings.Join(buf, "\n"))
 }
 
-func prepareSql(query string, args []any) (string, []any) {
+func prepareSql(ctx context.Context, query string, args []any) (*sql.Stmt, []any) {
 	oargs := make([]any, 0, len(args))
 	oquery := SQL_ARG_PATTERN.ReplaceAllStringFunc(query, func(s string) string {
 		s0 := s[1:]
@@ -121,7 +154,19 @@ func prepareSql(query string, args []any) (string, []any) {
 
 	logSql(oquery, oargs)
 
-	return oquery, oargs
+	if tx, ok := ctx.Value(ctxKey{}).(*sql.Tx); ok {
+		if stmt, err := tx.Prepare(oquery); err != nil {
+			panic(err)
+		} else {
+			return stmt, oargs
+		}
+	} else {
+		if stmt, err := db.Prepare(oquery); err != nil {
+			panic(err)
+		} else {
+			return stmt, oargs
+		}
+	}
 }
 
 func BeginTx(ctx context.Context, serializable bool) context.Context {
@@ -133,14 +178,32 @@ func BeginTx(ctx context.Context, serializable bool) context.Context {
 	if tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: isolation}); err != nil {
 		panic(err)
 	} else {
-		return context.WithValue(ctx, ctxKey{}, tx)
+		log.Printf("[DEBUG] Begin transaction\n")
+		return context.WithValue(ctx, ctxKey{}, &ctxRef{tx: tx, alive: true})
+	}
+}
+
+func CommitTx(ctx context.Context) {
+	if cr, ok := ctx.Value(ctxKey{}).(*ctxRef); ok {
+		if err := cr.Commit(); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func CloseTx(ctx context.Context) {
+	if cr, ok := ctx.Value(ctxKey{}).(*ctxRef); ok {
+		cr.Close()
 	}
 }
 
 // Exec 执行指定的sql并返回受影响的行数。
 func Exec[T int | int8 | int16 | int32 | int64](ctx context.Context, query string, args ...any) (T, error) {
-	query, args = prepareSql(query, args)
-	if r, err := db.ExecContext(ctx, query, args...); err != nil {
+	stmt, args := prepareSql(ctx, query, args)
+
+	defer stmt.Close()
+
+	if r, err := stmt.ExecContext(ctx, args...); err != nil {
 		if me, ok := err.(*mysql.MySQLError); ok && me.Number == 1452 /*违反外键约束的错误*/ {
 			return 0, nil
 		} else {
@@ -154,8 +217,11 @@ func Exec[T int | int8 | int16 | int32 | int64](ctx context.Context, query strin
 
 // ExecLastInsertId 执行指定的sql并返回插入的ID值。只要sql执行成功，即使未插入任何记录也不会返回错误。
 func ExecLastInsertId[T int | int8 | int16 | int32 | int64](ctx context.Context, query string, args ...any) (T, error) {
-	query, args = prepareSql(query, args)
-	if r, err := db.ExecContext(ctx, query, args...); err != nil {
+	stmt, args := prepareSql(ctx, query, args)
+
+	defer stmt.Close()
+
+	if r, err := stmt.ExecContext(ctx, args...); err != nil {
 		if me, ok := err.(*mysql.MySQLError); ok && me.Number == 1452 /*违反外键约束的错误*/ {
 			return 0, nil
 		} else {
@@ -171,8 +237,11 @@ func ExecLastInsertId[T int | int8 | int16 | int32 | int64](ctx context.Context,
 }
 
 func Query[T bool | int | int8 | int16 | int32 | int64 | string | time.Time | sql.NullInt64 | sql.NullBool | sql.NullTime](ctx context.Context, query string, args ...any) (T, error) {
-	query, args = prepareSql(query, args)
-	r := db.QueryRowContext(ctx, query, args...)
+	stmt, args := prepareSql(ctx, query, args)
+
+	defer stmt.Close()
+
+	r := stmt.QueryRowContext(ctx, args...)
 
 	var result T
 	if err := r.Scan(&result); err != nil {
@@ -191,8 +260,11 @@ type RowHandler[T any] interface {
 }
 
 func QueryObj[T any](ctx context.Context, query string, rh RowHandler[T], args ...any) (*T, error) {
-	query, args = prepareSql(query, args)
-	r := db.QueryRowContext(ctx, query, args...)
+	stmt, args := prepareSql(ctx, query, args)
+
+	defer stmt.Close()
+
+	r := stmt.QueryRowContext(ctx, args...)
 
 	if result, err := rh.Scan(r); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -206,8 +278,11 @@ func QueryObj[T any](ctx context.Context, query string, rh RowHandler[T], args .
 }
 
 func QueryList[T bool | int | int8 | int16 | int32 | int64 | string | time.Time | sql.NullInt64 | sql.NullBool | sql.NullTime](ctx context.Context, query string, args ...any) ([]T, error) {
-	query, args = prepareSql(query, args)
-	if r, err := db.QueryContext(ctx, query, args...); err != nil {
+	stmt, args := prepareSql(ctx, query, args)
+
+	defer stmt.Close()
+
+	if r, err := stmt.QueryContext(ctx, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		} else {
@@ -230,8 +305,11 @@ func QueryList[T bool | int | int8 | int16 | int32 | int64 | string | time.Time 
 
 // QueryObjList 查询对象列表。
 func QueryObjList[T any](ctx context.Context, query string, rh RowHandler[T], args ...any) ([]*T, error) {
-	query, args = prepareSql(query, args)
-	if r, err := db.QueryContext(ctx, query, args...); err != nil {
+	stmt, args := prepareSql(ctx, query, args)
+
+	defer stmt.Close()
+
+	if r, err := stmt.QueryContext(ctx, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		} else {

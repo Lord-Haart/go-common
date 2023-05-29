@@ -12,3 +12,6 @@ go.sum
 *.bak
 *.*~
 *.cmd
+
+*.java
+*.class

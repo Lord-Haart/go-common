@@ -1,8 +1,10 @@
 package dbhelper
 
 import (
+	"context"
 	"testing"
 
+	"github.com/Lord-Haart/go-common/utils"
 	mysql "github.com/go-sql-driver/mysql"
 )
 
@@ -25,11 +27,30 @@ func TestFormatDSN(t *testing.T) {
 	t.Logf("%s", cfg.FormatDSN())
 }
 
-// func TestRowsAffected(t *testing.T) {
-// 	if r0 := InsertOrUpdateUser(context.TODO(), "admin", "管理员", utils.Sha256Salt("123456")); r0 != 1 {
-// 		t.Errorf("InsertOrUpdateUser => %v, want 1", r0)
-// 	}
-// }
+func TestRowsAffected(t *testing.T) {
+	if r0, err := Exec[int](context.TODO(), "INSERT INTO user (user_name, nick_name, password) VALUE (:1, :2, :3)", "admin2", "管理员", utils.Sha256Salt("123456")); err != nil {
+		t.Fatal(err)
+	} else if r0 != 1 {
+		t.Errorf("InsertOrUpdateUser => %v, want 1", r0)
+	}
+}
+
+func TestUpdateWithTx(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
+
+	ctx = BeginTx(ctx, false)
+
+	defer CloseTx(ctx)
+
+	if r0, err := Exec[int](ctx, "INSERT INTO user (user_name, nick_name, password) VALUE (:1, :2, :3)", "admin99", "管理员", utils.Sha256Salt("123456")); err != nil {
+		t.Fatal(err)
+	} else if r0 != 1 {
+		t.Errorf("InsertOrUpdateUser => %v, want 1", r0)
+	}
+
+	CloseTx(ctx)
+}
 
 // func TestRowsAffected2(t *testing.T) {
 // 	if r0 := db.InsertOrUpdateWorkTime(context.TODO(), "xxxxxx001", "708513b8257fd6f547c7598b4c", "1080875157529746",
