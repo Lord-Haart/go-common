@@ -264,3 +264,31 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 }
+
+func (t Timestamp) String() string {
+	return time.Time(t).Format("2006-01-02T15:04:05Z")
+}
+
+type ISODate time.Time
+
+func (t ISODate) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(t).Format("20060102"))
+}
+
+func (t *ISODate) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	} else {
+		if dt, err := time.ParseInLocation("20060102", strings.TrimSpace(s), time.Local); err != nil {
+			return err
+		} else {
+			*t = ISODate(dt)
+			return nil
+		}
+	}
+}
+
+func (t ISODate) String() string {
+	return time.Time(t).Format("2006-01-02")
+}

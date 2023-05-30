@@ -84,3 +84,52 @@ func TestTimestampJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestISODateJSON(t *testing.T) {
+	testcases1 := []struct {
+		param1 ISODate
+		result string
+	}{
+		{
+			param1: ISODate(time.Date(2003, time.January, 2, 0, 0, 0, 0, time.Local)),
+			result: `"20030102"`,
+		},
+		{
+			param1: ISODate(time.Date(2025, time.December, 7, 0, 0, 0, 0, time.Local)),
+			result: `"20251207"`,
+		},
+	}
+
+	for _, testcase := range testcases1 {
+		if b, err := json.Marshal(testcase.param1); err != nil {
+			t.Fatal(err)
+		} else if r := string(b); r != testcase.result {
+			t.Errorf("Marshal(%v) => %v, wants %v", time.Time(testcase.param1), r, testcase.result)
+		}
+	}
+
+	testcases2 := []struct {
+		param1 string
+		result ISODate
+	}{
+		{
+			param1: `"20030102"`,
+			result: ISODate(time.Date(2003, time.January, 2, 0, 0, 0, 0, time.Local)),
+		},
+		{
+			param1: `"20231207"`,
+			result: ISODate(time.Date(2023, time.December, 7, 0, 0, 0, 0, time.Local)),
+		},
+	}
+
+	for _, testcase := range testcases2 {
+		var r ISODate
+		if err := json.Unmarshal([]byte(testcase.param1), &r); err != nil {
+			t.Fatal(err)
+		} else {
+			if r != testcase.result {
+				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
+			}
+		}
+	}
+}
