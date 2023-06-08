@@ -390,7 +390,7 @@ func JoinInInt[T int | int8 | int16 | int32 | int64](args []T) string {
 	} else {
 		sa := make([]string, 0, len(args))
 		for _, a := range args {
-			sa = append(sa, strconv.FormatInt(int64(a), 64))
+			sa = append(sa, strconv.FormatInt(int64(a), 10))
 		}
 		return "(" + strings.Join(sa, ",") + ")"
 	}

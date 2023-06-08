@@ -68,7 +68,9 @@ func (b *SqlBuilder) OrderBy(sql ...string) *SqlBuilder {
 
 func (b *SqlBuilder) Limit(startRowIndex, maximumRows int) *SqlBuilder {
 	var sql string
-	if startRowIndex <= 0 {
+	if maximumRows <= 0 {
+		return b
+	} else if startRowIndex <= 0 {
 		sql = "LIMIT " + strconv.FormatInt(int64(maximumRows), 10)
 	} else {
 		sql = "LIMIT " + strconv.FormatInt(int64(maximumRows), 10) + " OFFSET " + strconv.FormatInt(int64(startRowIndex), 10)
