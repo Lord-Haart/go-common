@@ -133,3 +133,15 @@ func TestISODateJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestSet(t *testing.T) {
+	st1 := NewSet("a", "", "a", "b")
+
+	t.Logf("%v", st1)
+
+	if st1.Len() != 3 {
+		t.Errorf("len(s) => %v, wants %v", st1.Len(), 3)
+	}
+
+	t.Logf("%v", st1.AllKeys())	
+}

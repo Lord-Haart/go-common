@@ -22,10 +22,16 @@ type Set[T comparable] struct {
 }
 
 func (ss *Set[T]) Len() int {
+	if ss == nil {
+		return 0
+	}
 	return len(ss.data)
 }
 
 func (ss *Set[T]) IsEmpty() bool {
+	if ss == nil {
+		return true
+	}
 	return len(ss.data) == 0
 }
 
@@ -38,10 +44,16 @@ func (ss *Set[T]) Remove(t T) {
 }
 
 func (ss *Set[T]) Contains(t T) bool {
+	if ss == nil {
+		return false
+	}
 	return ss.data[t]
 }
 
 func (ss *Set[T]) ContainsAny(t ...T) bool {
+	if ss == nil {
+		return false
+	}
 	for _, t0 := range t {
 		if ss.data[t0] {
 			return true
@@ -49,6 +61,26 @@ func (ss *Set[T]) ContainsAny(t ...T) bool {
 	}
 
 	return false
+}
+
+func (ss *Set[T]) String() string {
+	result := make([]string, 0, ss.Len())
+	for k, v := range ss.data {
+		if v {
+			result = append(result, fmt.Sprintf("%v", k))
+		}
+	}
+	return "[" + strings.Join(result, ",") + "]"
+}
+
+func (ss *Set[T]) AllKeys() []T {
+	result := make([]T, 0, ss.Len())
+	for k, v := range ss.data {
+		if v {
+			result = append(result, k)
+		}
+	}
+	return result
 }
 
 func NewSet[T comparable](t ...T) *Set[T] {
