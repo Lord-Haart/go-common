@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -323,4 +324,16 @@ func (t *ISODate) UnmarshalJSON(data []byte) error {
 
 func (t ISODate) String() string {
 	return time.Time(t).Format("2006-01-02")
+}
+
+func FileExists(fn string) (bool, error) {
+	if _, err := os.Stat(fn); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		} else {
+			return false, err
+		}
+	} else {
+		return true, nil
+	}
 }

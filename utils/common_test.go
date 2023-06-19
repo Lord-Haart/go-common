@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"log"
 	"strconv"
 	"testing"
 	"time"
@@ -143,5 +144,13 @@ func TestSet(t *testing.T) {
 		t.Errorf("len(s) => %v, wants %v", st1.Len(), 3)
 	}
 
-	t.Logf("%v", st1.AllKeys())	
+	t.Logf("%v", st1.AllKeys())
+}
+
+func TestRollingFileWriter(t *testing.T) {
+	log.SetOutput(DefaultRollingFileWriter)
+
+	log.Printf("[DEBUG] xxxxx\n")
+	log.Printf("[DEBUG] 12345\n")
+	log.Printf("[DEBUG] 67890\n")
 }
