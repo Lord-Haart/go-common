@@ -2,8 +2,34 @@ package dbhelper
 
 import (
 	"database/sql"
+	"strconv"
+	"strings"
 	"time"
 )
+
+func ParseNullInt64(s string) sql.NullInt64 {
+	if i, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64); err != nil {
+		return sql.NullInt64{}
+	} else {
+		return sql.NullInt64{Valid: true, Int64: i}
+	}
+}
+
+func ParseNullInt32(s string) sql.NullInt32 {
+	if i, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64); err != nil {
+		return sql.NullInt32{}
+	} else {
+		return sql.NullInt32{Valid: true, Int32: int32(i)}
+	}
+}
+
+func ParseNullInt16(s string) sql.NullInt16 {
+	if i, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64); err != nil {
+		return sql.NullInt16{}
+	} else {
+		return sql.NullInt16{Valid: true, Int16: int16(i)}
+	}
+}
 
 func CoalseceString(v sql.NullString, dv string) string {
 	if v.Valid {
@@ -45,7 +71,7 @@ func CoalseceInt16(v sql.NullInt16, dv int16) int16 {
 	}
 }
 
-func CoalseceInt8(v sql.NullByte, dv byte) byte {
+func CoalseceByte(v sql.NullByte, dv byte) byte {
 	if v.Valid {
 		return v.Byte
 	} else {

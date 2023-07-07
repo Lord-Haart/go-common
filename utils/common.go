@@ -282,13 +282,74 @@ func ToStr(o any, ds string) string {
 	}
 }
 
+type Boolean struct {
+	Valid bool
+	Bool  bool
+}
+
+func (b Boolean) MarshalJSON() ([]byte, error) {
+	if !b.Valid {
+		return json.Marshal(nil)
+	} else {
+		return json.Marshal(b.Bool)
+	}
+}
+
+func (b *Boolean) UnmarshalJSON(data []byte) error {
+	s0 := strings.ToLower(strings.TrimSpace(string(data)))
+	if s0 == "null" || s0 == "" || s0 == `''` || s0 == `""` {
+		b.Valid = false
+		b.Bool = false
+		return nil
+	} else if s0 == "true" || s0 == "1" {
+		b.Valid = true
+		b.Bool = true
+		return nil
+	} else if s0 == "false" || s0 == "0" {
+		b.Valid = true
+		b.Bool = false
+		return nil
+	} else if s1, err := strconv.Unquote(s0); err != nil {
+		return fmt.Errorf("illegal boolean: %#v", s0)
+	} else if s1 == "yes" || s1 == "on" || s1 == "t" || s1 == "y" {
+		b.Valid = true
+		b.Bool = true
+		return nil
+	} else if s1 == "no" || s1 == "off" || s1 == "f" || s1 == "n" {
+		b.Valid = true
+		b.Bool = false
+		return nil
+	} else {
+		return fmt.Errorf("illegal boolean: %#v", s0)
+	}
+}
+
+func (b Boolean) String() string {
+	if !b.Valid {
+		return "null"
+	} else if b.Bool {
+		return "true"
+	} else {
+		return "false"
+	}
+}
+
 type Timestamp time.Time
 
 func (t Timestamp) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Time(t).Unix())
+	if time.Time(t).IsZero() {
+		return json.Marshal(nil)
+	} else {
+		return json.Marshal(time.Time(t).Unix())
+	}
 }
 
 func (t *Timestamp) UnmarshalJSON(data []byte) error {
+	if s0 := string(data); s0 == `null` || s0 == `''` || s0 == `""` {
+		*t = Timestamp{}
+		return nil
+	}
+
 	var l int64
 	if err := json.Unmarshal(data, &l); err != nil {
 		return err
@@ -299,19 +360,30 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 }
 
 func (t Timestamp) String() string {
-	return time.Time(t).Format("2006-01-02T15:04:05Z")
+	if time.Time(t).IsZero() {
+		return "null"
+	} else {
+		return time.Time(t).Format("2006-01-02T15:04:05Z")
+	}
 }
 
 type ISODate time.Time
 
 func (t ISODate) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Time(t).Format("20060102"))
+	if time.Time(t).IsZero() {
+		return json.Marshal(nil)
+	} else {
+		return json.Marshal(time.Time(t).Format("20060102"))
+	}
 }
 
 func (t *ISODate) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
+	} else if s == "null" || s == "" {
+		*t = ISODate{}
+		return nil
 	} else {
 		if dt, err := time.ParseInLocation("20060102", strings.TrimSpace(s), time.Local); err != nil {
 			return err
@@ -323,7 +395,11 @@ func (t *ISODate) UnmarshalJSON(data []byte) error {
 }
 
 func (t ISODate) String() string {
-	return time.Time(t).Format("2006-01-02")
+	if time.Time(t).IsZero() {
+		return "null"
+	} else {
+		return time.Time(t).Format("2006-01-02")
+	}
 }
 
 func FileExists(fn string) (bool, error) {

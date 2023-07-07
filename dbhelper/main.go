@@ -127,6 +127,14 @@ func logSql(query string, args []any) {
 
 		if t, ok := av.(time.Time); ok {
 			buf = append(buf, fmt.Sprintf("  [%d] %s", i+1, t.Format("2006-01-02T15:04:05-0700")))
+		} else if j, ok := av.(int64); ok {
+			buf = append(buf, fmt.Sprintf("  [%d] %d", i+1, j))
+		} else if j, ok := av.(int32); ok {
+			buf = append(buf, fmt.Sprintf("  [%d] %d", i+1, j))
+		} else if j, ok := av.(int); ok {
+			buf = append(buf, fmt.Sprintf("  [%d] %d", i+1, j))
+		} else if j, ok := av.(float64); ok {
+			buf = append(buf, fmt.Sprintf("  [%d] %.2f", i+1, j))
 		} else {
 			buf = append(buf, fmt.Sprintf("  [%d] %#v", i+1, av))
 		}

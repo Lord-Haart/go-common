@@ -34,6 +34,10 @@ func TestSplitInt(t *testing.T) {
 	}
 }
 
+func timestampIsEqual(t1, t2 Timestamp) bool {
+	return time.Time(t1).In(time.UTC) == time.Time(t2).In(time.UTC)
+}
+
 func TestTimestampJSON(t *testing.T) {
 	testcases1 := []struct {
 		param1 Timestamp
@@ -78,9 +82,50 @@ func TestTimestampJSON(t *testing.T) {
 		if err := json.Unmarshal([]byte(strconv.FormatInt(testcase.param1, 10)), &r); err != nil {
 			t.Fatal(err)
 		} else {
-			r = Timestamp(time.Time(r).In(time.UTC))
-			if r != testcase.result {
+			if !timestampIsEqual(r, testcase.result) {
 				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, time.Time(r), time.Time(testcase.result))
+			}
+		}
+	}
+
+	type Rec struct {
+		Key  string    `json:"key,omitempty"`
+		Time Timestamp `json:"time,omitempty"`
+	}
+
+	testcases3 := []struct {
+		param1 string
+		result Rec
+	}{
+		{
+			param1: `{ "key": "item2", "time": 1041515675 }`,
+			result: Rec{Key: "item2", Time: Timestamp(time.Date(2003, time.January, 2, 13, 54, 35, 0, time.UTC))},
+		},
+		{
+			param1: `{ "time": 1765094463, "key":    "item3"}`,
+			result: Rec{Key: "item3", Time: Timestamp(time.Date(2025, time.December, 7, 8, 1, 3, 0, time.UTC))},
+		},
+		{
+			param1: `{   "key": "item3"   }`,
+			result: Rec{Key: "item3", Time: Timestamp{}},
+		},
+		{
+			param1: `{   "key": "item4", "time": null   }`,
+			result: Rec{Key: "item4", Time: Timestamp{}},
+		},
+		{
+			param1: `{   "key": "item4", "time": ""   }`,
+			result: Rec{Key: "item4", Time: Timestamp{}},
+		},
+	}
+
+	for _, testcase := range testcases3 {
+		var r Rec
+		if err := json.Unmarshal([]byte(testcase.param1), &r); err != nil {
+			t.Fatal(err)
+		} else {
+			if r.Key != testcase.result.Key || !timestampIsEqual(r.Time, testcase.result.Time) {
+				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
 			}
 		}
 	}
@@ -98,6 +143,10 @@ func TestISODateJSON(t *testing.T) {
 		{
 			param1: ISODate(time.Date(2025, time.December, 7, 0, 0, 0, 0, time.Local)),
 			result: `"20251207"`,
+		},
+		{
+			param1: ISODate{},
+			result: `null`,
 		},
 	}
 
@@ -129,6 +178,159 @@ func TestISODateJSON(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			if r != testcase.result {
+				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
+			}
+		}
+	}
+
+	type Rec struct {
+		Key  string  `json:"key,omitempty"`
+		Date ISODate `json:"date,omitempty"`
+	}
+
+	testcases3 := []struct {
+		param1 string
+		result Rec
+	}{
+		{
+			param1: `{ "key": "item2", "date": "20030102" }`,
+			result: Rec{Key: "item2", Date: ISODate(time.Date(2003, time.January, 2, 0, 0, 0, 0, time.Local))},
+		},
+		{
+			param1: `{ "date": "20251207" , "key":    "item3"}`,
+			result: Rec{Key: "item3", Date: ISODate(time.Date(2025, time.December, 7, 0, 0, 0, 0, time.Local))},
+		},
+		{
+			param1: `{   "key": "item3"   }`,
+			result: Rec{Key: "item3", Date: ISODate{}},
+		},
+		{
+			param1: `{   "key": "item4", "time": null   }`,
+			result: Rec{Key: "item4", Date: ISODate{}},
+		},
+		{
+			param1: `{   "key": "item4", "time": ""   }`,
+			result: Rec{Key: "item4", Date: ISODate{}},
+		},
+	}
+
+	for _, testcase := range testcases3 {
+		var r Rec
+		if err := json.Unmarshal([]byte(testcase.param1), &r); err != nil {
+			t.Fatal(err)
+		} else {
+			if r.Key != testcase.result.Key || r.Date != testcase.result.Date {
+				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
+			}
+		}
+	}
+}
+
+func TestBooleanJSON(t *testing.T) {
+	testcases1 := []struct {
+		param1 Boolean
+		result string
+	}{
+		{
+			param1: Boolean{Valid: true, Bool: true},
+			result: `true`,
+		},
+		{
+			param1: Boolean{Valid: true, Bool: false},
+			result: `false`,
+		},
+		{
+			param1: Boolean{},
+			result: `null`,
+		},
+	}
+
+	for _, testcase := range testcases1 {
+		if b, err := json.Marshal(testcase.param1); err != nil {
+			t.Fatal(err)
+		} else if r := string(b); r != testcase.result {
+			t.Errorf("Marshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
+		}
+	}
+
+	testcases2 := []struct {
+		param1 string
+		result Boolean
+	}{
+		{
+			param1: `true`,
+			result: Boolean{Valid: true, Bool: true},
+		},
+		{
+			param1: `false`,
+			result: Boolean{Valid: true, Bool: false},
+		},
+		{
+			param1: `null`,
+			result: Boolean{},
+		},
+	}
+
+	for _, testcase := range testcases2 {
+		var r Boolean
+		if err := json.Unmarshal([]byte(testcase.param1), &r); err != nil {
+			t.Fatal(err)
+		} else {
+			if r != testcase.result {
+				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
+			}
+		}
+	}
+
+	type Rec struct {
+		Key    string  `json:"key,omitempty"`
+		Status Boolean `json:"status,omitempty"`
+	}
+
+	testcases3 := []struct {
+		param1 string
+		result Rec
+	}{
+		{
+			param1: `{ "key": "item2", "status": true }`,
+			result: Rec{Key: "item2", Status: Boolean{Valid: true, Bool: true}},
+		},
+		{
+			param1: `{ "status":    false   , "key":    "item3"}`,
+			result: Rec{Key: "item3", Status: Boolean{Valid: true, Bool: false}},
+		},
+		{
+			param1: `{ "status": 0 , "key":    "item3"}`,
+			result: Rec{Key: "item3", Status: Boolean{Valid: true, Bool: false}},
+		},
+		{
+			param1: `{ "status": "yes" , "key":    "item3"}`,
+			result: Rec{Key: "item3", Status: Boolean{Valid: true, Bool: true}},
+		},
+		{
+			param1: `{ "status": "n" , "key":    "item3"}`,
+			result: Rec{Key: "item3", Status: Boolean{Valid: true, Bool: false}},
+		},
+		{
+			param1: `{   "key": "item3"   }`,
+			result: Rec{Key: "item3", Status: Boolean{}},
+		},
+		{
+			param1: `{   "key": "item4", "time": null   }`,
+			result: Rec{Key: "item4", Status: Boolean{}},
+		},
+		{
+			param1: `{   "key": "item4", "time": ""   }`,
+			result: Rec{Key: "item4", Status: Boolean{}},
+		},
+	}
+
+	for _, testcase := range testcases3 {
+		var r Rec
+		if err := json.Unmarshal([]byte(testcase.param1), &r); err != nil {
+			t.Fatal(err)
+		} else {
+			if r.Key != testcase.result.Key || r.Status != testcase.result.Status {
 				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
 			}
 		}
