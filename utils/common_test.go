@@ -2,11 +2,17 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strconv"
 	"testing"
 	"time"
 )
+
+func TestSha256Salt(t *testing.T) {
+	t.Logf(Sha256Salt("123456"))
+	t.Logf(Sha256Salt("778899"))
+}
 
 func TestSplitInt(t *testing.T) {
 	sa1 := []string{
@@ -227,6 +233,8 @@ func TestISODateJSON(t *testing.T) {
 }
 
 func TestBooleanJSON(t *testing.T) {
+	fmt.Printf("%v\n", 100_000_000)
+
 	testcases1 := []struct {
 		param1 Boolean
 		result string
@@ -330,7 +338,7 @@ func TestBooleanJSON(t *testing.T) {
 		if err := json.Unmarshal([]byte(testcase.param1), &r); err != nil {
 			t.Fatal(err)
 		} else {
-			if r.Key != testcase.result.Key || r.Status != testcase.result.Status {
+			if r != testcase.result {
 				t.Errorf("Unmarshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
 			}
 		}

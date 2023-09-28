@@ -160,15 +160,19 @@ func prepareSql(ctx context.Context, query string, args []any) (*sql.Stmt, []any
 		}
 	})
 
-	logSql(oquery, oargs)
+	if cr, ok := ctx.Value(ctxKey{}).(*ctxRef); ok {
+		logSql("[TX] "+oquery, oargs)
+		if !cr.alive {
+			panic(fmt.Errorf("current transaction is not alive"))
+		}
 
-	if tx, ok := ctx.Value(ctxKey{}).(*sql.Tx); ok {
-		if stmt, err := tx.Prepare(oquery); err != nil {
+		if stmt, err := cr.tx.Prepare(oquery); err != nil {
 			panic(err)
 		} else {
 			return stmt, oargs
 		}
 	} else {
+		logSql(oquery, oargs)
 		if stmt, err := db.Prepare(oquery); err != nil {
 			panic(err)
 		} else {
