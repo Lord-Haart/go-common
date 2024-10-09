@@ -94,3 +94,11 @@ func CoalseceFloat64(v sql.NullFloat64, dv float64) float64 {
 		return dv
 	}
 }
+
+// EscapeLikeString 对LIKE参数进行转义。
+func EscapeLikeString(s string) string {
+	s = strings.ReplaceAll(s, "/", "//")
+	s = strings.ReplaceAll(s, "%", "/%")
+	s = strings.ReplaceAll(s, "_", "/_")
+	return s
+}
