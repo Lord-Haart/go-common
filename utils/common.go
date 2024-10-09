@@ -270,6 +270,28 @@ func SplitAsInt[T int | int8 | int16 | int32 | int64](s, sep string) []T {
 	return result
 }
 
+// SplitAndTrim
+func SplitAndTrim(s, sep string) []string {
+	tmp := strings.Split(s, sep)
+	result := make([]string, 0, len(tmp))
+	for _, ts := range tmp {
+		ts := strings.TrimSpace(ts)
+		if ts == "" {
+			continue
+		}
+		result = append(result, ts)
+	}
+	return result
+}
+
+func StringListToUpper(sa []string) (result []string) {
+	result = make([]string, 0, len(sa))
+	for _, si := range sa {
+		result = append(result, strings.ToUpper(si))
+	}
+	return
+}
+
 // ToStr 将对象转化为字符串。
 // 如果o表示nil则返回ds。
 func ToStr(o any, ds string) string {
@@ -282,89 +304,21 @@ func ToStr(o any, ds string) string {
 	}
 }
 
-type Boolean struct {
-	Valid bool
-	Bool  bool
-}
-
-func (b Boolean) MarshalJSON() ([]byte, error) {
-	if !b.Valid {
-		return json.Marshal(nil)
+func IntListToStr[T int | int8 | int16 | int32 | int64](l []T) string {
+	if len(l) == 0 {
+		return ""
 	} else {
-		return json.Marshal(b.Bool)
-	}
-}
-
-func (b *Boolean) UnmarshalJSON(data []byte) error {
-	s0 := strings.ToLower(strings.TrimSpace(string(data)))
-	if s0 == "null" || s0 == "" || s0 == `''` || s0 == `""` {
-		b.Valid = false
-		b.Bool = false
-		return nil
-	} else if s0 == "true" || s0 == "1" {
-		b.Valid = true
-		b.Bool = true
-		return nil
-	} else if s0 == "false" || s0 == "0" {
-		b.Valid = true
-		b.Bool = false
-		return nil
-	} else if s1, err := strconv.Unquote(s0); err != nil {
-		return fmt.Errorf("illegal boolean: %#v", s0)
-	} else if s1 == "yes" || s1 == "on" || s1 == "t" || s1 == "y" {
-		b.Valid = true
-		b.Bool = true
-		return nil
-	} else if s1 == "no" || s1 == "off" || s1 == "f" || s1 == "n" {
-		b.Valid = true
-		b.Bool = false
-		return nil
-	} else {
-		return fmt.Errorf("illegal boolean: %#v", s0)
+		k := make([]string, 0, len(l))
+		for _, v := range l {
+			k = append(k, strconv.FormatInt(int64(v), 10))
+		}
+		return strings.Join(k, ",")
 	}
 }
 
-func (b Boolean) String() string {
-	if !b.Valid {
-		return "null"
-	} else if b.Bool {
-		return "true"
-	} else {
-		return "false"
-	}
-}
-
-type Timestamp time.Time
-
-func (t Timestamp) MarshalJSON() ([]byte, error) {
-	if time.Time(t).IsZero() {
-		return json.Marshal(nil)
-	} else {
-		return json.Marshal(time.Time(t).Unix())
-	}
-}
-
-func (t *Timestamp) UnmarshalJSON(data []byte) error {
-	if s0 := string(data); s0 == `null` || s0 == `''` || s0 == `""` {
-		*t = Timestamp{}
-		return nil
-	}
-
-	var l int64
-	if err := json.Unmarshal(data, &l); err != nil {
-		return err
-	} else {
-		*t = Timestamp(time.Unix(l, 0))
-		return nil
-	}
-}
-
-func (t Timestamp) String() string {
-	if time.Time(t).IsZero() {
-		return "null"
-	} else {
-		return time.Time(t).Format("2006-01-02T15:04:05Z")
-	}
+// EncodeJson 将字符串进行json编码。
+func EncodeJson(s string) string {
+	return "\"" + strings.ReplaceAll(s, `"`, `\"`) + "\""
 }
 
 type ISODate time.Time

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,7 +53,7 @@ func InitRedis(addr, username, password, prefix string, db int) error {
 }
 
 func getRedisKey(key string) string {
-	return rprefix + "$" + key
+	return rprefix + ":" + key
 }
 
 // HashSetIfExists 设置Hash，如果指定的key存在，同时保留ttl。
@@ -149,5 +150,35 @@ func Del(ctx context.Context, key ...string) bool {
 		return false
 	} else {
 		return n > 0
+	}
+}
+
+// RedisValueToInt64 将redis返回的值转换为int64。
+func RedisValueToInt64(s any, ds int64) int64 {
+	if s == nil {
+		return ds
+	} else if rs, ok := s.(string); ok {
+		if rr, err := strconv.ParseInt(strings.TrimSpace(rs), 10, 64); err != nil {
+			return ds
+		} else {
+			return rr
+		}
+	} else {
+		return ds
+	}
+}
+
+// RedisValueToBoolean 将redis返回的值转换为bool。
+func RedisValueToBoolean(s any, ds bool) bool {
+	if s == nil {
+		return ds
+	} else if rs, ok := s.(string); ok {
+		if rr, err := strconv.ParseBool(strings.TrimSpace(rs)); err != nil {
+			return ds
+		} else {
+			return rr
+		}
+	} else {
+		return ds
 	}
 }
