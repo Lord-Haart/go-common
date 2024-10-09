@@ -134,6 +134,13 @@ func (b *Boolean) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (b *Boolean) Merge(o Boolean) {
+	if o.Valid {
+		b.Valid = true
+		b.V = o.V
+	}
+}
+
 // Scan implements the [Scanner] interface.
 func (b *Boolean) Scan(value any) error {
 	if value == nil {
@@ -227,6 +234,13 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (s *String) Merge(o String) {
+	if o.Valid {
+		s.Valid = true
+		s.V = o.V
+	}
+}
+
 // Scan implements the [Scanner] interface.
 func (s *String) Scan(value any) error {
 	if value == nil {
@@ -307,6 +321,13 @@ func (i *Integer) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func (i *Integer) Merge(o Integer) {
+	if o.Valid {
+		i.Valid = true
+		i.V = o.V
+	}
 }
 
 func (i *Integer) Scan(value any) error {
@@ -401,6 +422,13 @@ func (i *Short) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (s *Short) Merge(o Short) {
+	if o.Valid {
+		s.Valid = true
+		s.V = o.V
+	}
+}
+
 func (s *Short) Scan(value any) error {
 	if value == nil {
 		s.V, s.Valid = 0, false
@@ -491,6 +519,13 @@ func (i *Long) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func (l *Long) Merge(o Long) {
+	if o.Valid {
+		l.Valid = true
+		l.V = o.V
+	}
 }
 
 func (l *Long) Scan(value any) error {
@@ -587,6 +622,13 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 		t.Valid = true
 		t.V = time.Unix(l, 0)
 		return nil
+	}
+}
+
+func (t *Timestamp) Merge(o Timestamp) {
+	if o.Valid {
+		t.Valid = true
+		t.V = o.V
 	}
 }
 
