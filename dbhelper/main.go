@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Lord-Haart/go-common/utils"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -89,39 +90,65 @@ func logSql(query string, args []any) {
 	buf = append(buf, query)
 	for i, arg := range args {
 		av := any(nil)
-		if ns, ok := arg.(sql.NullString); ok {
-			if ns.Valid {
-				av = ns.String
+
+		switch v := arg.(type) {
+		case sql.NullString:
+			if v.Valid {
+				av = v.String
 			}
-		} else if ni, ok := arg.(sql.NullInt64); ok {
-			if ni.Valid {
-				av = ni.Int64
+		case sql.NullInt64:
+			if v.Valid {
+				av = v.Int64
 			}
-		} else if ni, ok := arg.(sql.NullInt32); ok {
-			if ni.Valid {
-				av = ni.Int32
+		case sql.NullInt32:
+			if v.Valid {
+				av = v.Int32
 			}
-		} else if ni, ok := arg.(sql.NullInt16); ok {
-			if ni.Valid {
-				av = ni.Int16
+		case sql.NullInt16:
+			if v.Valid {
+				av = v.Int16
 			}
-		} else if ni, ok := arg.(sql.NullByte); ok {
-			if ni.Valid {
-				av = ni.Byte
+		case sql.NullByte:
+			if v.Valid {
+				av = v.Byte
 			}
-		} else if ni, ok := arg.(sql.NullFloat64); ok {
-			if ni.Valid {
-				av = ni.Float64
+		case sql.NullFloat64:
+			if v.Valid {
+				av = v.Float64
 			}
-		} else if ni, ok := arg.(sql.NullBool); ok {
-			if ni.Valid {
-				av = ni.Bool
+		case sql.NullBool:
+			if v.Valid {
+				av = v.Bool
 			}
-		} else if ni, ok := arg.(sql.NullTime); ok {
-			if ni.Valid {
-				av = ni.Time
+		case sql.NullTime:
+			if v.Valid {
+				av = v.Time
 			}
-		} else {
+		case utils.String:
+			if v.Valid {
+				av = v.V
+			}
+		case utils.Integer:
+			if v.Valid {
+				av = v.V
+			}
+		case utils.Short:
+			if v.Valid {
+				av = v.V
+			}
+		case utils.Long:
+			if v.Valid {
+				av = v.V
+			}
+		case utils.Boolean:
+			if v.Valid {
+				av = v.V
+			}
+		case utils.Timestamp:
+			if v.Valid {
+				av = v.V
+			}
+		default:
 			av = arg
 		}
 

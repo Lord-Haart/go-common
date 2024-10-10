@@ -143,6 +143,10 @@ func (b *Boolean) Merge(o Boolean) *Boolean {
 	return b
 }
 
+func (b *Boolean) Eq(ov bool) bool {
+	return b.Valid && b.V == ov
+}
+
 func (b Boolean) Coalsece(o bool) bool {
 	if b.Valid {
 		return b.V
@@ -237,11 +241,14 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	if rs == "null" || rs == "" {
 		s.Valid = false
 		s.V = ""
+		return nil
+	} else if s0, err := strconv.Unquote(rs); err != nil {
+		return err
 	} else {
 		s.Valid = true
-		s.V = rs
+		s.V = s0
+		return nil
 	}
-	return nil
 }
 
 func (s *String) Merge(o String) *String {
@@ -251,6 +258,10 @@ func (s *String) Merge(o String) *String {
 	}
 
 	return s
+}
+
+func (s *String) Eq(ov string) bool {
+	return s.Valid && s.V == ov
 }
 
 func (s String) Coalsece(o string) string {
@@ -366,6 +377,10 @@ func (i *Integer) Merge(o Integer) *Integer {
 	return i
 }
 
+func (i *Integer) Eq(ov int32) bool {
+	return i.Valid && i.V == ov
+}
+
 func (i Integer) Coalsece(o int32) int32 {
 	if i.Valid {
 		return i.V
@@ -475,6 +490,10 @@ func (s *Short) Merge(o Short) *Short {
 	return s
 }
 
+func (s *Short) Eq(ov int16) bool {
+	return s.Valid && s.V == ov
+}
+
 func (s Short) Coalsece(o int16) int16 {
 	if s.Valid {
 		return s.V
@@ -582,6 +601,10 @@ func (l *Long) Merge(o Long) *Long {
 	}
 
 	return l
+}
+
+func (l *Long) Eq(ov int64) bool {
+	return l.Valid && l.V == ov
 }
 
 func (s Long) Coalsece(o int64) int64 {
@@ -696,6 +719,10 @@ func (t *Timestamp) Merge(o Timestamp) *Timestamp {
 	}
 
 	return t
+}
+
+func (t *Timestamp) Eq(ov time.Time) bool {
+	return t.Valid && t.V == ov
 }
 
 func (t Timestamp) Coalsece(o time.Time) time.Time {
