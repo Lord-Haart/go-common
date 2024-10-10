@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Lord-Haart/go-common/utils"
 )
 
 func ParseNullInt64(s string) sql.NullInt64 {
@@ -96,9 +98,13 @@ func CoalseceFloat64(v sql.NullFloat64, dv float64) float64 {
 }
 
 // EscapeLikeString 对LIKE参数进行转义。
-func EscapeLikeString(s string) string {
-	s = strings.ReplaceAll(s, "/", "//")
-	s = strings.ReplaceAll(s, "%", "/%")
-	s = strings.ReplaceAll(s, "_", "/_")
-	return s
+func EscapeLikeString(s utils.String) utils.String {
+	if s.Valid {
+		s0 := strings.ReplaceAll(s.V, "/", "//")
+		s0 = strings.ReplaceAll(s0, "%", "/%")
+		s0 = strings.ReplaceAll(s0, "_", "/_")
+		return utils.String{Valid: true, V: s0}
+	} else {
+		return utils.String{}
+	}
 }
