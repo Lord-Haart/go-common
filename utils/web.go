@@ -10,10 +10,14 @@ type PageRequest struct {
 type Page[T any] struct {
 	TotalPages       int   `json:"totalPages,omitempty"`
 	TotalElements    int64 `json:"totalElements,omitempty"`
-	Number           int   `json:"number,omitempty"`
-	Size             int   `json:"size,omitempty"`
+	PageNumber       int   `json:"number,omitempty"`
+	PageSize         int   `json:"size,omitempty"`
 	NumberOfElements int   `json:"numberOfElements,omitempty"`
 	Content          []T   `json:"content,omitempty"`
+}
+
+func (pr *PageRequest) GetStartRowIndex() int {
+	return pr.PageNumber * pr.PageSize
 }
 
 // MakePage 构造分页查询结果
@@ -39,8 +43,8 @@ func MakePage[T any](page, size int, total int64, content []T) Page[T] {
 	return Page[T]{
 		TotalPages:       totalPages,
 		TotalElements:    total,
-		Number:           page,
-		Size:             size,
+		PageNumber:       page,
+		PageSize:         size,
 		NumberOfElements: len(content),
 		Content:          content,
 	}
@@ -57,8 +61,8 @@ func MakePage2[T any](content []T) Page[T] {
 	return Page[T]{
 		TotalPages:       totalPages,
 		TotalElements:    int64(len(content)),
-		Number:           len(content),
-		Size:             len(content),
+		PageNumber:       len(content),
+		PageSize:         len(content),
 		NumberOfElements: len(content),
 		Content:          content,
 	}

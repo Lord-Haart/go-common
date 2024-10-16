@@ -389,6 +389,14 @@ func (i Integer) Coalsece(o int32) int32 {
 	}
 }
 
+func (i Integer) CoalseceInt(o int) int {
+	if i.Valid {
+		return int(i.V)
+	} else {
+		return o
+	}
+}
+
 func (i *Integer) Scan(value any) error {
 	if value == nil {
 		i.V, i.Valid = 0, false
