@@ -367,3 +367,14 @@ func FileExists(fn string) (bool, error) {
 		return true, nil
 	}
 }
+
+func HasPrefixFold(s, prefix string) bool {
+	return len(s) >= len(prefix) && strings.EqualFold(s[0:len(prefix)], prefix)
+}
+
+func TrimPrefixFold(s, prefix string) string {
+	if HasPrefixFold(s, prefix) {
+		return s[len(prefix):]
+	}
+	return s
+}

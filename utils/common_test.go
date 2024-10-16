@@ -160,3 +160,53 @@ func TestRollingFileWriter(t *testing.T) {
 	log.Printf("[DEBUG] 12345\n")
 	log.Printf("[DEBUG] 67890\n")
 }
+
+func TestHasPrefixFold(t *testing.T) {
+	testcases := []struct {
+		p1 string
+		p2 string
+		r  bool
+	}{
+		{"", "", true},
+		{"", "a", false},
+		{"a", "", true},
+		{"a", "a", true},
+		{"a", "b", false},
+		{"abc", "A", true},
+		{"abc", "aB", true},
+		{"abc", "aBc", true},
+		{"Ahaha", "Bear ", false},
+		{"Bear Ahaha", "Bear ", true},
+	}
+
+	for _, testcase := range testcases {
+		if r := HasPrefixFold(testcase.p1, testcase.p2); r != testcase.r {
+			t.Errorf("HasPrefixFold(%q, %q) = %v, want %v", testcase.p1, testcase.p2, r, testcase.r)
+		}
+	}
+}
+
+func TestTrimPrefixFold(t *testing.T) {
+	testcases := []struct {
+		p1 string
+		p2 string
+		r  string
+	}{
+		{"", "", ""},
+		{"", "a", ""},
+		{"a", "", "a"},
+		{"a", "a", ""},
+		{"a", "b", "a"},
+		{"abc", "A", "bc"},
+		{"abc", "aB", "c"},
+		{"abc", "aBc", ""},
+		{"Ahaha", "Bear ", "Ahaha"},
+		{"Bear Ahaha", "Bear ", "Ahaha"},
+	}
+
+	for _, testcase := range testcases {
+		if r := TrimPrefixFold(testcase.p1, testcase.p2); r != testcase.r {
+			t.Errorf("TrimPrefixFold(%q, %q) = %q, want %q", testcase.p1, testcase.p2, r, testcase.r)
+		}
+	}
+}
