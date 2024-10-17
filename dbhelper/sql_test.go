@@ -19,13 +19,27 @@ func TestSqlBuilder1(t *testing.T) {
 }
 
 func TestSqlBuilder2(t *testing.T) {
+	b0 := NewSqlBuilder("UPDATE foot").
+		Set().
+		AppendIf("b = :2", true).
+		AppendIf("c = :3", false).
+		AppendIf("e = :4", true).
+		Append("k = :7").
+		End().
+		Where().
+		Append("d = :5").
+		End()
+
+	t.Logf("sql: %s", b0)
+}
+
+func TestSqlBuilder3(t *testing.T) {
 	b0 := NewSqlBuilder("INSERT INTO foo").
 		Inserter("`").
 		Append("id").
 		AppendIf("name", false).
 		Append("create_time").
-		End().
-		String()
+		End()
 
 	t.Logf("sql: %s", b0)
 }

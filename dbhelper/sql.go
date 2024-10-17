@@ -68,7 +68,11 @@ func (b *SqlBuilder) Inserter(quote string) *InsertSqlBuilder {
 }
 
 func (b *SqlBuilder) Where() *DynamicSqlBuilder {
-	return b.Dynamic("WHERE ", "", "\n  AND ")
+	return b.Dynamic("WHERE\n ", "", "\n  AND ")
+}
+
+func (b *SqlBuilder) Set() *DynamicSqlBuilder {
+	return b.Dynamic("SET\n ", "", ",\n  ")
 }
 
 func (b *SqlBuilder) OrderBy(sql ...string) *SqlBuilder {
@@ -105,7 +109,15 @@ func (d *DynamicSqlBuilder) AppendIf(sql string, p bool) *DynamicSqlBuilder {
 
 func (d *DynamicSqlBuilder) End() *SqlBuilder {
 	if len(d.texts) > 0 {
-		d.builder.append0(d.prefix + strings.Join(d.texts, d.joint) + d.suffix)
+		dp := d.prefix
+		if dp != "" {
+			dp = dp + " "
+		}
+		ds := d.suffix
+		if ds != "" {
+			ds = " " + ds
+		}
+		d.builder.append0(dp + strings.Join(d.texts, d.joint) + ds)
 	}
 	return d.builder
 }
