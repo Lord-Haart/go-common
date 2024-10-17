@@ -17,3 +17,15 @@ func TestSqlBuilder1(t *testing.T) {
 
 	t.Logf("sql: %s", b0)
 }
+
+func TestSqlBuilder2(t *testing.T) {
+	b0 := NewSqlBuilder("INSERT INTO foo").
+		Inserter("`").
+		Append("id").
+		AppendIf("name", false).
+		Append("create_time").
+		End().
+		String()
+
+	t.Logf("sql: %s", b0)
+}

@@ -17,6 +17,14 @@ type (
 		joint   string
 		builder *SqlBuilder
 	}
+
+	InsertSqlBuilder struct {
+		quote   string
+		pos     int
+		cols    []string
+		params  []int
+		builder *SqlBuilder
+	}
 )
 
 func NewSqlBuilder(sql string) *SqlBuilder {
@@ -53,6 +61,10 @@ func (b *SqlBuilder) Dynamic(prefix, suffix, joint string) *DynamicSqlBuilder {
 		joint:   joint,
 		builder: b,
 	}
+}
+
+func (b *SqlBuilder) Inserter(quote string) *InsertSqlBuilder {
+	return &InsertSqlBuilder{quote: quote, cols: []string{}, builder: b}
 }
 
 func (b *SqlBuilder) Where() *DynamicSqlBuilder {
@@ -94,6 +106,41 @@ func (d *DynamicSqlBuilder) AppendIf(sql string, p bool) *DynamicSqlBuilder {
 func (d *DynamicSqlBuilder) End() *SqlBuilder {
 	if len(d.texts) > 0 {
 		d.builder.append0(d.prefix + strings.Join(d.texts, d.joint) + d.suffix)
+	}
+	return d.builder
+}
+
+func (d *InsertSqlBuilder) Append(col string) *InsertSqlBuilder {
+	d.pos++
+	d.cols = append(d.cols, col)
+	d.params = append(d.params, d.pos)
+
+	return d
+}
+
+func (d *InsertSqlBuilder) AppendIf(col string, p bool) *InsertSqlBuilder {
+	d.pos++
+	if p {
+		d.cols = append(d.cols, col)
+		d.params = append(d.params, d.pos)
+	}
+
+	return d
+}
+
+func (d *InsertSqlBuilder) End() *SqlBuilder {
+	if len(d.cols) > 0 {
+		buf := make([]string, 0, len(d.cols))
+		for _, col := range d.cols {
+			buf = append(buf, d.quote+col+d.quote)
+		}
+
+		d.builder.append0("(" + strings.Join(buf, ",") + ")")
+		posList := make([]string, 0, len(d.params))
+		for _, pos := range d.params {
+			posList = append(posList, ":"+strconv.Itoa(pos))
+		}
+		d.builder.append0("VALUES (" + strings.Join(posList, ",") + ")")
 	}
 	return d.builder
 }
