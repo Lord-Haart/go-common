@@ -82,6 +82,9 @@ func (b *SqlBuilder) OrderBy(sql ...string) *SqlBuilder {
 	return b
 }
 
+// Limit 创建分页参数SQL。
+// startRowIndex 起始行索引，从0开始。
+// maximumRows 最大行数，如果小于等于0，则不添加LIMIT子句。
 func (b *SqlBuilder) Limit(startRowIndex, maximumRows int) *SqlBuilder {
 	var sql string
 	if maximumRows <= 0 {
