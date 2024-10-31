@@ -8,12 +8,12 @@ type PageRequest struct {
 
 // Page 表示分页查询结果
 type Page[T any] struct {
-	TotalPages       int   `json:"totalPages,omitempty"`
-	TotalElements    int64 `json:"totalElements,omitempty"`
-	PageNumber       int   `json:"number,omitempty"`
-	PageSize         int   `json:"size,omitempty"`
-	NumberOfElements int   `json:"numberOfElements,omitempty"`
-	Content          []T   `json:"content,omitempty"`
+	TotalPages       int   `json:"totalPages"`
+	TotalElements    int64 `json:"totalElements"`
+	PageNumber       int   `json:"number"`
+	PageSize         int   `json:"size"`
+	NumberOfElements int   `json:"numberOfElements"`
+	Content          []T   `json:"content"`
 }
 
 func (pr *PageRequest) GetStartRowIndex() int {
