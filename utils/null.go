@@ -777,7 +777,7 @@ func (t *Timestamp) Scan(value any) error {
 			t.Valid = false
 		}
 	case time.Time:
-		t.Valid = v.IsZero()
+		t.Valid = !v.IsZero()
 		t.V = v
 	default:
 		t.Valid = false
