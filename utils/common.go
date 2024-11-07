@@ -378,3 +378,39 @@ func TrimPrefixFold(s, prefix string) string {
 	}
 	return s
 }
+
+func LeftStr(s string, n int) string {
+	if n >= len(s) {
+		return s
+	} else if n <= 0 {
+		return ""
+	} else {
+		return s[:n]
+	}
+}
+
+func RightStr(s string, n int) string {
+	if n >= len(s) {
+		return s
+	} else if n <= 0 {
+		return ""
+	} else {
+		return s[len(s)-n:]
+	}
+}
+
+func MidStr(s string, start, end int) string {
+	if start < 0 {
+		start = 0
+	}
+
+	if end > len(s) {
+		end = len(s)
+	}
+
+	if start >= end {
+		return ""
+	} else {
+		return s[start:end]
+	}
+}

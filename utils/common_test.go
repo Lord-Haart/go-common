@@ -210,3 +210,69 @@ func TestTrimPrefixFold(t *testing.T) {
 		}
 	}
 }
+
+func TestLeftStr(t *testing.T) {
+	testcases := []struct {
+		p1 string
+		p2 int
+		r  string
+	}{
+		{"", 0, ""},
+		{"", 1, ""},
+		{"", 2, ""},
+		{"a", 0, ""},
+		{"a", 1, "a"},
+		{"a", 2, "a"},
+		{"abc", 0, ""},
+		{"abc", 1, "a"},
+	}
+
+	for _, testcase := range testcases {
+		if r := LeftStr(testcase.p1, testcase.p2); r != testcase.r {
+			t.Errorf("LeftStr(%q, %d) = %q, want %q", testcase.p1, testcase.p2, r, testcase.r)
+		}
+	}
+}
+
+func TestRightStr(t *testing.T) {
+	testcases := []struct {
+		p1 string
+		p2 int
+		r  string
+	}{
+		{"hello", 3, "llo"},
+		{"hello", 1, "o"},
+		{"hello", 5, "hello"},
+		{"hello", 10, "hello"},
+		{"", 3, ""},
+		{"a", 1, "a"},
+	}
+
+	for _, testcase := range testcases {
+		if r := RightStr(testcase.p1, testcase.p2); r != testcase.r {
+			t.Errorf("RightStr(%q, %d) = %q, want %q", testcase.p1, testcase.p2, r, testcase.r)
+		}
+	}
+}
+
+func TestMidStr(t *testing.T) {
+	testcases := []struct {
+		p1 string
+		p2 int
+		p3 int
+		r  string
+	}{
+		{"hello", 1, 3, "el"},
+		{"hello", 2, 4, "ll"},
+		{"hello", 2, 2, ""},
+		{"hello", 3, 5, "lo"},
+		{"hello", 4, 6, "o"},
+		{"hello", 5, 7, ""},
+	}
+
+	for _, testcase := range testcases {
+		if r := MidStr(testcase.p1, testcase.p2, testcase.p3); r != testcase.r {
+			t.Errorf("MidStr(%q, %d, %d) = %q, want %q", testcase.p1, testcase.p2, testcase.p3, r, testcase.r)
+		}
+	}
+}
