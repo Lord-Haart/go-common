@@ -235,7 +235,7 @@ func TestStringJSON(t *testing.T) {
 func TestTimestampJSON(t *testing.T) {
 	testcases1 := []struct {
 		param1 Timestamp
-		result int64
+		result float64
 	}{
 		{
 			param1: Timestamp{Valid: true, V: time.Date(2003, time.January, 2, 13, 54, 35, 0, time.UTC)},
@@ -245,12 +245,16 @@ func TestTimestampJSON(t *testing.T) {
 			param1: Timestamp{Valid: true, V: time.Date(2025, time.December, 7, 8, 1, 3, 0, time.UTC)},
 			result: 1765094463,
 		},
+		{
+			param1: Timestamp{Valid: true, V: time.Date(2025, time.December, 7, 8, 1, 3, 775_000000, time.UTC)},
+			result: 1765094463.775,
+		},
 	}
 
 	for _, testcase := range testcases1 {
 		if b, err := json.Marshal(testcase.param1); err != nil {
 			t.Fatal(err)
-		} else if r, err := strconv.ParseInt(string(b), 10, 64); err != nil {
+		} else if r, err := strconv.ParseFloat(string(b), 64); err != nil {
 			t.Fatal(err)
 		} else if r != testcase.result {
 			t.Errorf("Marshal(%v) => %v, wants %v", testcase.param1, r, testcase.result)
@@ -258,7 +262,7 @@ func TestTimestampJSON(t *testing.T) {
 	}
 
 	testcases2 := []struct {
-		param1 int64
+		param1 float64
 		result Timestamp
 	}{
 		{
@@ -266,14 +270,14 @@ func TestTimestampJSON(t *testing.T) {
 			result: Timestamp{Valid: true, V: time.Date(2003, time.January, 2, 13, 54, 35, 0, time.UTC)},
 		},
 		{
-			param1: 1765094463,
-			result: Timestamp{Valid: true, V: time.Date(2025, time.December, 7, 8, 1, 3, 0, time.UTC)},
+			param1: 1765094463.094,
+			result: Timestamp{Valid: true, V: time.Date(2025, time.December, 7, 8, 1, 3, 94_000000, time.UTC)},
 		},
 	}
 
 	for _, testcase := range testcases2 {
 		var r Timestamp
-		if err := json.Unmarshal([]byte(strconv.FormatInt(testcase.param1, 10)), &r); err != nil {
+		if err := json.Unmarshal([]byte(strconv.FormatFloat(testcase.param1, 'f', 3, 64)), &r); err != nil {
 			t.Fatal(err)
 		} else {
 			if !timestampIsEqual(r, testcase.result) {

@@ -700,7 +700,11 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
 		return json.Marshal(nil)
 	} else {
-		return json.Marshal(t.V.Unix())
+		if t.V.Nanosecond() == 0 {
+			return json.Marshal(t.V.Unix())
+		} else {
+			return json.Marshal(float64(t.V.UnixMilli()) / 1000)
+		}
 	}
 }
 
@@ -711,8 +715,15 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 	}
 
 	var l int64
+	var d float64
 	if err := json.Unmarshal(data, &l); err != nil {
-		return err
+		if err := json.Unmarshal(data, &d); err != nil {
+			return err
+		} else {
+			t.Valid = true
+			t.V = time.UnixMilli(int64(d * 1000))
+			return nil
+		}
 	} else {
 		t.Valid = true
 		t.V = time.Unix(l, 0)
