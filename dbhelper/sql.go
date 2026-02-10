@@ -13,6 +13,16 @@ func DateAdd(expr string, seconds int) string {
 	return fmt.Sprintf("DATE_ADD(%s, INTERVAL %d SECOND)", expr, seconds)
 }
 
+// JsonArrayOverlap 生成 JSON 数组交集判断 SQL 片段。
+// MySQL:      JSON_OVERLAPS(column, param)
+// PostgreSQL: column::jsonb ?| param
+func JsonArrayOverlap(column, param string) string {
+	if dialect == DialectPostgres {
+		return fmt.Sprintf("%s::jsonb ?| %s", column, param)
+	}
+	return fmt.Sprintf("JSON_OVERLAPS(%s, %s)", column, param)
+}
+
 func DateSub(expr string, seconds int) string {
 	if dialect == DialectPostgres {
 		return fmt.Sprintf("(%s - INTERVAL '%d seconds')", expr, seconds)
