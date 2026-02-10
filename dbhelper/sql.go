@@ -1,9 +1,24 @@
 package dbhelper
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
+
+func DateAdd(expr string, seconds int) string {
+	if dialect == DialectPostgres {
+		return fmt.Sprintf("(%s + INTERVAL '%d seconds')", expr, seconds)
+	}
+	return fmt.Sprintf("DATE_ADD(%s, INTERVAL %d SECOND)", expr, seconds)
+}
+
+func DateSub(expr string, seconds int) string {
+	if dialect == DialectPostgres {
+		return fmt.Sprintf("(%s - INTERVAL '%d seconds')", expr, seconds)
+	}
+	return fmt.Sprintf("DATE_SUB(%s, INTERVAL %d SECOND)", expr, seconds)
+}
 
 type (
 	SqlBuilder struct {

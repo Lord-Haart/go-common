@@ -13,6 +13,14 @@ import (
 
 	"github.com/Lord-Haart/go-common/utils"
 	"github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
+)
+
+type DbDialect string
+
+const (
+	DialectMySQL    DbDialect = "mysql"
+	DialectPostgres DbDialect = "postgres"
 )
 
 type DbRow interface {
@@ -57,8 +65,11 @@ func (cr *ctxRef) Close() error {
 
 var (
 	db              *sql.DB
-	SQL_ARG_PATTERN = regexp.MustCompile(`:[1|2|3|4|5|6|7|8|9](0|1|2|3|4|5|6|7|8|9)?`)
+	dialect         DbDialect = DialectMySQL
+	SQL_ARG_PATTERN            = regexp.MustCompile(`:[1|2|3|4|5|6|7|8|9](0|1|2|3|4|5|6|7|8|9)?`)
 )
+
+func GetDialect() DbDialect { return dialect }
 
 // InitMySqlDb 初始化MySql数据源。
 func InitMySqlDb(addr, username, password, dbname string) error {
@@ -80,6 +91,26 @@ func InitMySqlDb(addr, username, password, dbname string) error {
 		}
 
 		db = db_
+		dialect = DialectMySQL
+		return nil
+	}
+}
+
+// InitPostgresDb 初始化PostgreSQL数据源。
+func InitPostgresDb(host string, port int, username, password, dbname string) error {
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, username, password, dbname)
+	if db_, err := sql.Open("postgres", dsn); err != nil {
+		return err
+	} else {
+		db_.SetConnMaxLifetime(300 * time.Second)
+		db_.SetMaxIdleConns(2)
+		if err := db_.Ping(); err != nil {
+			return err
+		}
+
+		db = db_
+		dialect = DialectPostgres
 		return nil
 	}
 }
@@ -172,6 +203,7 @@ func logSql(query string, args []any) {
 
 func prepareSql(ctx context.Context, query string, args []any) (*sql.Stmt, []any) {
 	oargs := make([]any, 0, len(args))
+	paramIdx := 0
 	oquery := SQL_ARG_PATTERN.ReplaceAllStringFunc(query, func(s string) string {
 		s0 := s[1:]
 		if v, err := strconv.ParseInt(s0, 10, 64); err != nil {
@@ -180,6 +212,10 @@ func prepareSql(ctx context.Context, query string, args []any) (*sql.Stmt, []any
 			si := int(v)
 			if si <= len(args) {
 				oargs = append(oargs, args[si-1])
+				paramIdx++
+				if dialect == DialectPostgres {
+					return "$" + strconv.Itoa(paramIdx)
+				}
 				return "?"
 			} else {
 				panic(fmt.Errorf("no enough args, wants %d", si))
@@ -236,6 +272,19 @@ func CloseTx(ctx context.Context) {
 	}
 }
 
+// isForeignKeyViolation 判断错误是否为外键约束违反。
+func isForeignKeyViolation(err error) bool {
+	var me *mysql.MySQLError
+	if errors.As(err, &me) && me.Number == 1452 {
+		return true
+	}
+	var pe *pq.Error
+	if errors.As(err, &pe) && pe.Code == "23503" {
+		return true
+	}
+	return false
+}
+
 // Exec 执行指定的sql并返回受影响的行数。
 func Exec[T int | int8 | int16 | int32 | int64](ctx context.Context, query string, args ...any) (T, error) {
 	stmt, args := prepareSql(ctx, query, args)
@@ -243,7 +292,7 @@ func Exec[T int | int8 | int16 | int32 | int64](ctx context.Context, query strin
 	defer stmt.Close()
 
 	if r, err := stmt.ExecContext(ctx, args...); err != nil {
-		if me, ok := err.(*mysql.MySQLError); ok && me.Number == 1452 /*违反外键约束的错误*/ {
+		if isForeignKeyViolation(err) {
 			return 0, nil
 		} else {
 			return 0, err
@@ -256,12 +305,28 @@ func Exec[T int | int8 | int16 | int32 | int64](ctx context.Context, query strin
 
 // ExecLastInsertId 执行指定的sql并返回插入的ID值。只要sql执行成功，即使未插入任何记录也不会返回错误。
 func ExecLastInsertId[T int | int8 | int16 | int32 | int64](ctx context.Context, query string, args ...any) (T, error) {
+	if dialect == DialectPostgres {
+		// PostgreSQL不支持LastInsertId()，需要用RETURNING id。
+		hasIgnore := strings.Contains(strings.ToUpper(query), "INSERT IGNORE")
+		if hasIgnore {
+			query = strings.Replace(query, "INSERT IGNORE INTO", "INSERT INTO", 1)
+		}
+		if !strings.Contains(strings.ToUpper(query), "RETURNING") {
+			suffix := ""
+			if hasIgnore {
+				suffix = " ON CONFLICT DO NOTHING"
+			}
+			query = strings.TrimSpace(query) + suffix + " RETURNING id"
+		}
+		return Query[T](ctx, query, args...)
+	}
+
 	stmt, args := prepareSql(ctx, query, args)
 
 	defer stmt.Close()
 
 	if r, err := stmt.ExecContext(ctx, args...); err != nil {
-		if me, ok := err.(*mysql.MySQLError); ok && me.Number == 1452 /*违反外键约束的错误*/ {
+		if isForeignKeyViolation(err) {
 			return 0, nil
 		} else {
 			return 0, err
