@@ -31,7 +31,7 @@ func MakePage[T any](page, size int, total int64, content []T) Page[T] {
 		}
 	} else {
 		totalPages = int(total / int64(size))
-		if total%int64(size) == 0 {
+		if total%int64(size) != 0 {
 			totalPages++
 		}
 	}
