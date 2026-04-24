@@ -147,7 +147,7 @@ func (b *Boolean) Eq(ov bool) bool {
 	return b.Valid && b.V == ov
 }
 
-func (b Boolean) Coalsece(o bool) bool {
+func (b Boolean) Coalesce(o bool) bool {
 	if b.Valid {
 		return b.V
 	} else {
@@ -264,7 +264,7 @@ func (s *String) Eq(ov string) bool {
 	return s.Valid && s.V == ov
 }
 
-func (s String) Coalsece(o string) string {
+func (s String) Coalesce(o string) string {
 	if s.Valid {
 		return s.V
 	} else {
@@ -381,7 +381,7 @@ func (i *Integer) Eq(ov int32) bool {
 	return i.Valid && i.V == ov
 }
 
-func (i Integer) Coalsece(o int32) int32 {
+func (i Integer) Coalesce(o int32) int32 {
 	if i.Valid {
 		return i.V
 	} else {
@@ -389,7 +389,7 @@ func (i Integer) Coalsece(o int32) int32 {
 	}
 }
 
-func (i Integer) CoalseceInt(o int) int {
+func (i Integer) CoalesceInt(o int) int {
 	if i.Valid {
 		return int(i.V)
 	} else {
@@ -502,7 +502,7 @@ func (s *Short) Eq(ov int16) bool {
 	return s.Valid && s.V == ov
 }
 
-func (s Short) Coalsece(o int16) int16 {
+func (s Short) Coalesce(o int16) int16 {
 	if s.Valid {
 		return s.V
 	} else {
@@ -615,7 +615,7 @@ func (l *Long) Eq(ov int64) bool {
 	return l.Valid && l.V == ov
 }
 
-func (s Long) Coalsece(o int64) int64 {
+func (s Long) Coalesce(o int64) int64 {
 	if s.Valid {
 		return s.V
 	} else {
@@ -744,7 +744,7 @@ func (t *Timestamp) Eq(ov time.Time) bool {
 	return t.Valid && t.V == ov
 }
 
-func (t Timestamp) Coalsece(o time.Time) time.Time {
+func (t Timestamp) Coalesce(o time.Time) time.Time {
 	if t.Valid {
 		return t.V
 	} else {

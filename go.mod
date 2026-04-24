@@ -1,11 +1,11 @@
 module github.com/Lord-Haart/go-common
 
-go 1.21
+go 1.23
 
 require (
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/go-sql-driver/mysql v1.8.1
-	github.com/lib/pq v1.10.9
+	github.com/go-sql-driver/mysql v1.9.3
+	github.com/lib/pq v1.11.1
 )
 
 require (

@@ -434,7 +434,7 @@ func QueryObjList[T any](ctx context.Context, query string, rh RowHandler[T], ar
 }
 
 func QueryKeyValueMap[T bool | int | int8 | int16 | int32 | int64 | string](ctx context.Context, query string, args ...any) (map[string]T, error) {
-	if result, err := QueryObjList[KeyValuePairPo[T]](ctx, query, &KeyValuePairMapper[T]{}, args...); err != nil {
+	if result, err := QueryObjList(ctx, query, &KeyValuePairMapper[T]{}, args...); err != nil {
 		return nil, err
 	} else {
 		m := make(map[string]T, len(result))

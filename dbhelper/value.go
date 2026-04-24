@@ -33,7 +33,7 @@ func ParseNullInt16(s string) sql.NullInt16 {
 	}
 }
 
-func CoalseceString(v sql.NullString, dv string) string {
+func CoalesceString(v sql.NullString, dv string) string {
 	if v.Valid {
 		return v.String
 	} else {
@@ -41,7 +41,7 @@ func CoalseceString(v sql.NullString, dv string) string {
 	}
 }
 
-func CoalseceBool(v sql.NullBool, dv bool) bool {
+func CoalesceBool(v sql.NullBool, dv bool) bool {
 	if v.Valid {
 		return v.Bool
 	} else {
@@ -49,7 +49,7 @@ func CoalseceBool(v sql.NullBool, dv bool) bool {
 	}
 }
 
-func CoalseceInt64(v sql.NullInt64, dv int64) int64 {
+func CoalesceInt64(v sql.NullInt64, dv int64) int64 {
 	if v.Valid {
 		return v.Int64
 	} else {
@@ -57,7 +57,7 @@ func CoalseceInt64(v sql.NullInt64, dv int64) int64 {
 	}
 }
 
-func CoalseceInt32(v sql.NullInt32, dv int32) int32 {
+func CoalesceInt32(v sql.NullInt32, dv int32) int32 {
 	if v.Valid {
 		return v.Int32
 	} else {
@@ -65,7 +65,7 @@ func CoalseceInt32(v sql.NullInt32, dv int32) int32 {
 	}
 }
 
-func CoalseceInt16(v sql.NullInt16, dv int16) int16 {
+func CoalesceInt16(v sql.NullInt16, dv int16) int16 {
 	if v.Valid {
 		return v.Int16
 	} else {
@@ -73,7 +73,7 @@ func CoalseceInt16(v sql.NullInt16, dv int16) int16 {
 	}
 }
 
-func CoalseceByte(v sql.NullByte, dv byte) byte {
+func CoalesceByte(v sql.NullByte, dv byte) byte {
 	if v.Valid {
 		return v.Byte
 	} else {
@@ -81,7 +81,7 @@ func CoalseceByte(v sql.NullByte, dv byte) byte {
 	}
 }
 
-func CoalseceTime(v sql.NullTime, dv time.Time) time.Time {
+func CoalesceTime(v sql.NullTime, dv time.Time) time.Time {
 	if v.Valid {
 		return v.Time
 	} else {
@@ -89,7 +89,7 @@ func CoalseceTime(v sql.NullTime, dv time.Time) time.Time {
 	}
 }
 
-func CoalseceFloat64(v sql.NullFloat64, dv float64) float64 {
+func CoalesceFloat64(v sql.NullFloat64, dv float64) float64 {
 	if v.Valid {
 		return v.Float64
 	} else {
